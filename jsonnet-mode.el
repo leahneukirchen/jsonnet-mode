@@ -42,9 +42,15 @@
   "Major mode for editing Jsonnet files."
   :group 'languages)
 
-(defcustom jsonnet-command
+(defcustom jsonnet-eval-command
   "jsonnet"
   "Jsonnet command to run in ‘jsonnet-eval-buffer’."
+  :type '(string)
+  :group 'jsonnet)
+
+(defcustom jsonnet-format-command
+  "jsonnetfmt"
+  "Jsonnet command to run in ‘jsonnet-reformat-buffer’."
   :type '(string)
   :group 'jsonnet)
 
@@ -269,7 +275,7 @@ If not inside of a multiline string, return nil."
                                   collect "-J"
                                   collect dir)
                          (list file-to-eval))))
-        (if (zerop (apply #'call-process jsonnet-command nil t nil args))
+        (if (zerop (apply #'call-process jsonnet-eval-command nil t nil args))
             (progn
               (when (fboundp 'json-mode)
                 (json-mode))
@@ -346,10 +352,9 @@ If not provided, current point is used."
       (quit-window nil stderr-window))
     (unwind-protect
         (let* ((only-test buffer-read-only)
-               (exit-code (apply #'call-process-region nil nil jsonnet-command
+               (exit-code (apply #'call-process-region nil nil jsonnet-format-command
                                  nil (list stdout-buffer stderr-file) nil
-                                 (append '("fmt")
-                                         (when only-test '("--test"))
+                                 (append (when only-test '("--test"))
                                          '("-")))))
           (cond ((zerop exit-code)
                  (progn
