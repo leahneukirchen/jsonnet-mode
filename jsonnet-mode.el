@@ -48,6 +48,12 @@
   :type '(string)
   :group 'jsonnet)
 
+(defcustom jsonnetfmt-command
+  "jsonnetfmt"
+  "Jsonnetfmt command to run for reformatting."
+  :type '(string)
+  :group 'jsonnet)
+
 (defcustom jsonnet-library-search-directories
   nil
   "Sequence of Jsonnet library search directories, with later entries shadowing earlier entries."
@@ -339,17 +345,16 @@ If not provided, current point is used."
   (interactive)
   (let ((point (point))
         (file-name (buffer-file-name))
-        (stdout-buffer (get-buffer-create "*jsonnet fmt stdout*"))
-        (stderr-buffer-name "*jsonnet fmt stderr*")
+        (stdout-buffer (get-buffer-create "*jsonnetfmt stdout*"))
+        (stderr-buffer-name "*jsonnetfmt stderr*")
         (stderr-file (make-temp-file "jsonnet-fmt")))
     (when-let ((stderr-window (get-buffer-window stderr-buffer-name t)))
       (quit-window nil stderr-window))
     (unwind-protect
         (let* ((only-test buffer-read-only)
-               (exit-code (apply #'call-process-region nil nil jsonnet-command
+               (exit-code (apply #'call-process-region nil nil jsonnetfmt-command
                                  nil (list stdout-buffer stderr-file) nil
-                                 (append '("fmt")
-                                         (when only-test '("--test"))
+                                 (append (when only-test '("--test"))
                                          '("-")))))
           (cond ((zerop exit-code)
                  (progn
